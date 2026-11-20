@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>24 Kasım Öğretmenler Günü</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b1120;
+            --card-bg: #1e293b;
+            --gold: #eab308;
+            --gold-light: #fef08a;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --terminal-green: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Terminal Açılış Ekranı */
+        #terminal-screen {
+            font-family: 'Fira Code', monospace;
+            width: 100%;
+            max-width: 600px;
+            background: #020617;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .red { background: #ef4444; }
+        .yellow { background: #eab308; }
+        .green { background: #22c55e; }
+
+        .terminal-line {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            color: var(--terminal-green);
+            opacity: 0;
+            transform: translateY(5px);
+            transition: all 0.4s ease;
+        }
+
+        .terminal-line.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Ana Tebrik Kartı */
+        #main-card {
+            display: none;
+            width: 100%;
+            max-width: 680px;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 16px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(234, 179, 8, 0.08);
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .badge {
+            display: inline-block;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            color: var(--gold);
+            border: 1px solid rgba(234, 179, 8, 0.4);
+            padding: 5px 14px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(to right, #f8fafc, var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.05rem;
+            line-height: 1.6;
+            max-width: 540px;
+            margin: 0 auto 35px auto;
+        }
+
+        /* İnteraktif Kutular */
+        .decrypt-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .decrypt-box {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 20px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 130px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .decrypt-box:hover {
+            border-color: var(--gold);
+            transform: translateY(-3px);
+        }
+
+        .decrypt-box.unlocked {
+            border-color: var(--gold);
+            background: rgba(234, 179, 8, 0.08);
+            cursor: default;
+            transform: none;
+        }
+
+        .box-tag {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.75rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .box-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .box-content {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            display: none;
+        }
+
+        .decrypt-box.unlocked .box-content {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .decrypt-box.unlocked .box-title {
+            display: none;
+        }
+
+        /* Atatürk Sözü Alanı */
+        #quote-area {
+            display: none;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 1.05rem;
+            color: var(--gold-light);
+            margin-bottom: 8px;
+        }
+
+        .quote-author {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .footer-note {
+            margin-top: 30px;
+            font-size: 0.8rem;
+            color: #64748b;
+            font-family: 'Fira Code', monospace;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6rem; }
+            #main-card { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Terminal Açılış Ekranı -->
+    <div id="terminal-screen">
+        <div class="terminal-header">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+        </div>
+        <div class="terminal-line" id="line1">&gt; Initializing gratitude_protocol.sh...</div>
+        <div class="terminal-line" id="line2">&gt; Compiling lessons_learned &amp; inspiration: [██████████] 100%</div>
+        <div class="terminal-line" id="line3">&gt; Target: Değerli Hocam</div>
+        <div class="terminal-line" id="line4">&gt; Status: Respect_and_Appreciation_Verified. Opening card...</div>
+    </div>
+
+    <!-- Ana Tebrik Kartı -->
+    <div id="main-card">
+        <div class="badge">24 KASIM ÖĞRETMENLER GÜNÜ</div>
+        <h1>Değerli Hocam,<br>Öğretmenler Gününüz Kutlu Olsun</h1>
+        <p class="subtitle">
+            Yolumuza ışık tuttuğunuz, bilgiyi sabırla ve vizyonla paylaştığınız için sonsuz teşekkürler.
+        </p>
+
+        <div class="decrypt-grid">
+            <div class="decrypt-box" onclick="unlockBox(this, 1)">
+                <span class="box-tag">[KUTU 01]</span>
+                <span class="box-title">🔒 Kilidi Aç: Vizyon</span>
+                <p class="box-content">Sadece ders anlatmadınız, olaylara nasıl bakmamız ve nasıl düşünmemiz gerektiğini öğrettiniz.</p>
+            </div>
+
+            <div class="decrypt-box" onclick="unlockBox(this, 2)">
+                <span class="box-tag">[KUTU 02]</span>
+                <span class="box-title">🔒 Kilidi Aç: İlham</span>
+                <p class="box-content">Mesleki ve akademik yolculuğumuzda attığımız her adımda emeğinizin ve rehberliğinizin izi var.</p>
+            </div>
+
+            <div class="decrypt-box" onclick="unlockBox(this, 3)">
+                <span class="box-tag">[KUTU 03]</span>
+                <span class="box-title">🔒 Kilidi Aç: 24 Kasım</span>
+                <p class="box-content">İyi ki varsınız, iyi ki yollarımız kesişmiş. Saygı ve sevgilerimle...</p>
+            </div>
+        </div>
+
+        <div id="quote-area">
+            <p class="quote-text">"Öğretmenler! Yeni nesil sizin eseriniz olacaktır."</p>
+            <p class="quote-author">— Mustafa Kemal Atatürk</p>
+        </div>
+
+        <div class="footer-note">compiled with respect &amp; gratitude</div>
+    </div>
+
+    <script>
+        // Terminal animasyonu akışı
+        const lines = ['line1', 'line2', 'line3', 'line4'];
+        lines.forEach((id, index) => {
+            setTimeout(() => {
+                document.getElementById(id).classList.add('visible');
+            }, index * 650);
+        });
+
+        // Terminalden ana karta geçiş
+        setTimeout(() => {
+            document.getElementById('terminal-screen').style.display = 'none';
+            document.getElementById('main-card').style.display = 'block';
+        }, 3100);
+
+        // Kutuları açma ve konfeti tetikleme
+        let unlockedCount = 0;
+
+        function unlockBox(element, boxNumber) {
+            if (element.classList.contains('unlocked')) return;
+
+            element.classList.add('unlocked');
+            element.querySelector('.box-tag').innerText = `[AÇILDI 0${boxNumber}]`;
+            unlockedCount++;
+
+            // 3. kutu açıldığında veya tüm kutular tamamlandığında sürprizi patlat
+            if (boxNumber === 3 || unlockedCount === 3) {
+                document.getElementById('quote-area').style.display = 'block';
+                triggerConfetti();
+            }
+        }
+
+        function triggerConfetti() {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#eab308', '#fef08a', '#f8fafc', '#38bdf8']
+            });
+        }
+    </script>
+</body>
+</html>
